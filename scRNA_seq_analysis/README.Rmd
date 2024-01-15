@@ -1,15 +1,8 @@
----
-title: "ccRCC scRNA-seq analysis"
-author: "Jason"
-date: "2024-01-15"
-output: html_document
----
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
 # ccRCC scRNA-seq analysis
-## Required libraries
+## Enviroment setups
+### Recommending memory
+It is recommended to have memory>=30G to run scripts in this directory
+### Required libraries
 - SeuratV4
 - future
 - harmony
