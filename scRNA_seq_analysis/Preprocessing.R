@@ -1,6 +1,5 @@
 set.seed(10)
 library(Seurat)
-CreateSeuratObject()
 library(future)
 library(harmony)
 source("Azimuth.R")
@@ -8,8 +7,8 @@ source("Pipelines.R")
 source("Hyperparameters_for_pipeline.R")
 options(future.globals.maxSize= 80*1000*1024^2)
 plan("multicore", workers = number_of_thread)
-#load data from all cohort list
-scRNA_objs = readRDS("/scratch/yanv5j/all_cohorts_in_list.rds")
+#load data from the file "raw_data.rds"
+scRNA_objs = readRDS("your_path_to_raw_data.rds")
 for(i in seq(1,4,1)){
   scRNA_obj = scRNA_objs[[i]]
   study_source = unique(scRNA_obj@meta.data[,"study"])
