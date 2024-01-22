@@ -21,3 +21,7 @@ palette_color = c("firebrick1", "darkorange", "gold",
                   "chartreuse", "blue", "mediumorchid1", 
                   "cyan", "lightpink", "sienna4")
 heatmap_umap_colors = c("gold", "gold3", "grey", "cyan", "blue")
+# Define the directory path you want to create
+intermediate_dir <- "./intermediate_files"
+
+

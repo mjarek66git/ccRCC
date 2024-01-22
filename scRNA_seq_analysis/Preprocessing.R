@@ -5,6 +5,8 @@ library(harmony)
 source("Azimuth.R")
 source("Pipelines.R")
 source("Hyperparameters_for_pipeline.R")
+source("tools.R")
+check_dir(intermediate_dir)
 options(future.globals.maxSize= 80*1000*1024^2)
 plan("multicore", workers = number_of_thread)
 # load data from the file "raw_data.rds"
@@ -65,6 +67,6 @@ for(i in seq(1,2,1)){
                          "azimuth_anno_l2", "azimuth_anno_l3_score", "azimuth_anno_l3")]=
     scRNA_obj_azimuth@meta.data[,(ncol(scRNA_obj_azimuth@meta.data)-5):ncol(scRNA_obj_azimuth@meta.data)]
   rm(scRNA_obj_azimuth)
-  saveRDS(scRNA_obj, paste0("../scRNA_data/", paste(study_source, batch_correction_method, n_of_pc, 
+  saveRDS(scRNA_obj, paste0(intermediate_dir, paste(study_source, batch_correction_method, n_of_pc, 
                                                     "PCs", "azimuthed.rds", sep="_")))
 }
