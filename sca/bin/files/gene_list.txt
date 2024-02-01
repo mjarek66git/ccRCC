@@ -1,0 +1,28 @@
+Oxidative phosphorylation - Homo sapiens (human);OxPhos
+Glycolysis / Gluconeogenesis - Homo sapiens (human);Glycolysis
+HLA_J;HLA
+Glutathione_J;Glutathione
+NRF2_J;NRF2
+HIF1A_J;HIF
+HLA;HLA
+TCA_J;TCA
+Nucleotide metabolism - Homo sapiens (human);Nucleotide metabolism
+INFLAMMATORY_RESPONSE;Inflamatory response
+Fatty acid metabolism - Homo sapiens (human);FAM
+TNF signaling pathway - Homo sapiens (human);TNF
+Mismatch repair - Homo sapiens (human);DNA repair
+Cell cycle_J;Cell cycle
+Tyrosine metabolism - Homo sapiens (human);AAM
+INTERFERON_GAMMA_RESPONSE; IFNg
+Carbohydrate digestion and absorption - Homo sapiens (human);CHD
+TGF-beta signaling pathway - Homo sapiens (human);TGFb
+complex_J;Complex I
+complex II_J; Complex II
+complex III_J;Complex III
+complex IV_J;Complex IV
+complex V_J;Complex V
+Tight junction - Homo sapiens (human);TJ
+Fanconi anemia pathway - Homo sapiens (human);Fanconi anemia
+G2M_CHECKPOINT_J; G2M
+MITOTIC_SPINDLE;MS
+EMT_J;EMT

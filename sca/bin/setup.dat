@@ -1,0 +1,22 @@
+[FILES]
+files\batch_corrected_normalized_count_columbia_british.txt
+[FILTERS FOR JOINED DATA]
+Top best genes| Threshold=3000
+Min count threshold Column| Threshold=100
+Min count threshold Row| Threshold=500
+Shift data to non negative values
+Quantile row normalization
+Super gene file| file1=files\kegg_list_selected2.txt file2=files\HALLMARK_list.txt file3=files\Supergenes_jason_selected.txt
+Descritize| Number_of_states=25 Coding_algorithm=PERCENT Based_on_columns=true
+[CLUSTER]
+Number of upper clusters| 1000
+Number of left clusters| 1000
+File with left clusters| files\stage_id
+Distance| PEARSON
+[OUTPUT]
+File name| test1.emf
+Resolution| 2500x1000
+Simplfy upper dendrog| true
+Row annotation file| files\clusters_id53_new.txt
+Selected genes files| files\gene_list.txt
+Horizontal lines| true
