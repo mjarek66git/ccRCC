@@ -4,6 +4,7 @@ library(ggplot2)
 library(ggpubr)
 library(Seurat)
 library(dplyr)
+library(scclusteval)
 scRNA_obj = readRDS(
   paste0(intermediate_dir,"columbia_british_individually_harmony_ccRCC_harmony.rds")
 )
@@ -146,19 +147,6 @@ signature_list_umap = list(
   ),
   "Cu" = signature_list_master$`Cu-II_short`,
   "GSH" = signature_list_master$Glutathione
-  
-  # "HIF" = signature_list_master$HIF1A,
-  # "Glycolysis" = signature_list_master$Glycolysis,
-  # "OxPhos" = c(
-  #   signature_list_master$Complex_I,
-  #   signature_list_master$Complex_II,
-  #   signature_list_master$Complex_III,
-  #   signature_list_master$Complex_IV,
-  #   signature_list_master$Complex_V
-  # ),
-  # "Copper" = signature_list_master$`Cu-II_short`,
-  # "Glutathione" = signature_list_master$Glutathione,
-  # "NRF2" = signature_list_master$NRF2
 )
 # convert gene name from lower case to upper
 signature_list_umap = lapply(signature_list_umap, toupper)
@@ -203,6 +191,15 @@ data_bar_plot_new[11] <- "red"
 data_bar_plot_new[8] <- "blue"
 data_bar_plot_new[9] <- "purple"
 data_bar_plot_new[10] <- "green"
+
+###############################################################################
+###############################################################################
+###############################################################################
+# Figure 6A and 6C UMAPs
+###############################################################################
+###############################################################################
+###############################################################################
+###############################################################################
 
 for(current_stage in looping_stages){
   scRNA_obj_stage = subset(scRNA_obj, subset = stage == current_stage)
@@ -314,15 +311,12 @@ feature_umpas_panel = ggarrange(
 ###############################################################################
 ###############################################################################
 ###############################################################################
-# Violin quantifications
+# Figure 6C Violin quantifications
 ###############################################################################
 ###############################################################################
 ###############################################################################
 ###############################################################################
-# plot out violin
-
 pvalue_text_size = 4
-#legend_text_size = 7
 stage_colors_dic = c("yellow","orange", "red", "magenta")
 names(stage_colors_dic) = stage_dic
 stage_colors_template = as.vector(stage_colors_dic[looping_stages])
@@ -383,3 +377,207 @@ violins = ggarrange(
   common.legend = T,
   legend = "none"
 )
+
+###############################################################################
+###############################################################################
+###############################################################################
+# Figure 6B
+###############################################################################
+###############################################################################
+###############################################################################
+###############################################################################
+scRNA_obj_resampled_meta_df_list = readRDS(
+  paste0(intermediate_dir, "columbia_british_individually_harmony_ccRCC_resampled_harmony_meta_df_100sample.rds") 
+)
+
+target_res=0.53
+target_res_para = paste0("RNA_snn_res.", target_res)
+JaccardMatrixMaxTotal = c()
+for(i in seq(1,100)){
+  scRNA_obj_resampled_meta_df = scRNA_obj_resampled_meta_df_list[[i]]
+  resampled_cluster = scRNA_obj_resampled_meta_df[,target_res_para]
+  names(resampled_cluster) = rownames(scRNA_obj_resampled_meta_df)
+  original_cluster = scRNA_obj@meta.data[,target_res_para]
+  names(original_cluster) = rownames(scRNA_obj@meta.data)
+  JaccardMatrix = PairWiseJaccardSets(resampled_cluster, original_cluster)
+  JaccardMatrixMax = unlist(lapply(data.frame(JaccardMatrix), max))
+  JaccardMatrixMaxTotal = rbind(JaccardMatrixMaxTotal, JaccardMatrixMax)
+}
+
+JaccardMatrixMaxTotalDf = data.frame(JaccardMatrixMaxTotal, check.names = F)
+each_res_mean_of_median = mean(unlist(lapply(JaccardMatrixMaxTotalDf, median)))
+rownames(JaccardMatrixMaxTotalDf) = 1:nrow(JaccardMatrixMaxTotalDf)
+colnames(JaccardMatrixMaxTotalDf) = seq(0,(ncol(JaccardMatrixMaxTotalDf)-1))
+JaccardMatrixMaxTotalDf$id = rownames(JaccardMatrixMaxTotalDf)
+JaccardMatrixMaxTotalDfWide = tidyr::gather(JaccardMatrixMaxTotalDf, "vars", "values", -id)
+
+all_types = paste0("sc", 0:14)
+all_colors = data_bar_plot_new
+names(all_colors) = all_types
+JaccardMatrixMaxTotalDfWide$vars = paste0("sc", JaccardMatrixMaxTotalDfWide$vars)
+JaccardMatrixMaxTotalDfWide$vars = factor(JaccardMatrixMaxTotalDfWide$vars, levels = all_types)
+JaccardBoxPlot = ggplot(JaccardMatrixMaxTotalDfWide)+
+  geom_boxplot(mapping = aes(x=vars,y=values,fill = vars))+
+  scale_fill_manual(
+    breaks = all_types, 
+    values=all_colors[as.character(all_types)])+
+  xlab("Clusters")+
+  ylab("Max Jaccard Index")+
+  theme_light()+
+  theme(
+    axis.text.x = element_text(size = axis_text_size, face = "bold", family = "sans"),
+    # axis.text.x = element_blank(),
+    axis.text.y = element_text(size = axis_text_size, face = "bold", family = "sans"),
+    # axis.title.x = element_text(size = axis_title_size, face = "bold", family = "sans"),
+    axis.title.x = element_blank(),
+    axis.title.y = element_text(size = axis_title_size, face = "bold", family = "sans"),
+    plot.title = element_text(size=plot_title_size, face="bold", hjust = 0.5, family = "sans"),
+    legend.text=element_text(size=legend_text_size, face="bold", family = "sans"),
+    legend.title = element_blank(),
+    legend.position = "none",
+    legend.box.margin = unit(c(0,0,0,0), "cm"),
+    legend.margin = margin(t = 1, b = 1, r = 0, l = 0)
+  )+
+  scale_x_discrete(labels = c("sc: 0", as.character(1:14)))+
+  guides(fill = guide_legend(override.aes = list(size=legend_shape_size), nrow = 2, byrow = T))
+
+###############################################################################
+###############################################################################
+###############################################################################
+# Figure 6D
+###############################################################################
+###############################################################################
+###############################################################################
+###############################################################################
+
+# extract pcc df
+pcc_expression_df = scRNA_obj@meta.data[,paste0(signature_list_names, module_score_tag)]
+bars = lapply(pcc_expression_df, mean)
+
+pcc_revised = function(xv, yv, oxv, oyv, xbar=NULL, ybar=NULL){
+  if(is.null(xbar)){
+    xbar = mean(xv)
+    ybar = mean(yv)
+  }
+  cov = sum((xv-xbar)*(yv-ybar))
+  std_product = sum((oxv-xbar)^2)*sum((oyv-ybar)^2)
+  return(cov/sqrt(std_product))
+}
+combns = list(
+  c(2,3),
+  c(3,4),
+  c(4,5),
+  c(5,3)
+)
+total_res = c()
+for(combn in combns){
+  each_column = c()
+  for(cluster_idx in sort(as.numeric(as.character(unique(scRNA_obj@meta.data[,target_res_para]))))){
+    cells.use = rownames(scRNA_obj@meta.data[scRNA_obj@meta.data[,target_res_para]==cluster_idx, ])
+    pcc_expression_df_sub = scRNA_obj@meta.data[cells.use, paste0(signature_list_names, module_score_tag)]
+    pcc_r = pcc_revised(pcc_expression_df_sub[,names(bars)[combn[1]]], pcc_expression_df_sub[,names(bars)[combn[2]]],
+                        pcc_expression_df[,names(bars)[combn[1]]], pcc_expression_df[,names(bars)[combn[2]]], 
+                        bars[[combn[[1]]]], bars[[combn[[2]]]])
+    each_column[length(each_column)+1] = pcc_r
+  }
+  total_res = cbind(total_res, each_column)
+}
+
+total_res = data.frame(total_res)
+df_names = sapply(combns, function(x){
+  s1 = signature_list_names[x[1]]
+  s2 = signature_list_names[x[2]]
+  paste0(s1, "_vs._", s2)
+})
+names(total_res) = df_names
+rownames(total_res) = 0:14
+total_res_scaled = total_res
+
+# draw pcc residuals onto UMAPs
+# left join meta data with pcc results
+total_res_scaled$clusters = as.factor(rownames(total_res_scaled))
+join_key= "clusters"
+names(join_key) = target_res_para
+# scRNA_obj@meta.data = left_join(scRNA_obj@meta.data, total_res_scaled, by=setNames(nm=target_res_para, "clusters"))
+# reset PCC variables if they are already there
+if(any(names(total_res_scaled)[1:length(df_names)] %in% names(scRNA_obj@meta.data))){
+  scRNA_obj@meta.data = scRNA_obj@meta.data[,!(names(scRNA_obj@meta.data) %in% df_names)]
+}
+meta = dplyr::left_join(scRNA_obj@meta.data, total_res_scaled, by=join_key)
+total_res_scaled = total_res_scaled[,-ncol(total_res_scaled)]
+scRNA_obj@meta.data[,names(total_res_scaled)] = meta[,names(total_res_scaled)]
+
+
+all_ccs = lapply(total_res, sum)
+
+
+pcc_umaps = lapply(names(total_res_scaled), FUN = function(x){
+  cor_value = as.numeric(scRNA_obj@meta.data[,x])
+  high_cut = sort(unique(cor_value))[length(unique(cor_value))-3]
+  if(min(cor_value)<0){
+    rescale_values = scales::rescale(c(min(cor_value), 0, high_cut, max(cor_value)))
+    rescale_colors = c("blue", "gray88","red", "red")
+  }else{
+    rescale_values = scales::rescale(c(min(cor_value), high_cut, max(cor_value)))
+    rescale_colors = c("gray88","red", "red")
+  }
+  p = FeaturePlot(scRNA_obj, features = x, label = F, raster = T)+
+    # scale_color_gradientn(colours = rescale_colors, values = rescale_values)+
+    scale_colour_gradient2(low = "blue", mid = "gray88", high = "red", midpoint = 0,
+                           limits = c(-0.04, 0.04), oob = scales::squish)+
+    ggtitle(paste0(str_replace_all(x, "_", " "), "\n", "CC = ", round(all_ccs[[x]], 2)))+
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), 
+          plot.margin = unit(c(pmt,pmr,pmb, pml), "cm"),
+          axis.title.x = element_blank(), axis.title.y = element_blank(),
+          # axis.line = element_line(color = "black", size = axis_line_size,
+          #                          arrow = grid::arrow(length = unit(0.5, "cm"), ends = "last")),
+          axis.line = element_blank(),
+          axis.ticks = element_blank(),
+          axis.text = element_blank(),
+          plot.title = element_text(size=plot_title_size, face="bold", family = "sans"),
+          legend.text = element_text(size=legend_text_size, face="bold", family = "sans"),
+          legend.position= "bottom", legend.justification = "center",
+          legend.key.width = unit(1.1,"cm"),
+          legend.key.height = unit(0.35,"cm"),
+    )
+  # p = Seurat::LabelClusters(p, id = "ident", box = T, size = umap_label_size, repel = T, force = 10)
+  # p = p+scale_fill_manual(values = rep("white",length(unique(Idents(scRNA_obj)))))
+  return(p)
+})
+
+# output all plots here
+plot_dir = "./plots/"
+check_dir(plot_dir)
+each_width_ratio = 1
+png(paste0(plot_dir, "Figure6_A.png"), width = 6, height = 2, units = "in", res = 300)
+ggarrange(plotlist = subpopulations_umpas, legend = "none",
+          nrow = 1, ncol = (length(looping_stages)), 
+          widths = rep(each_width_ratio, length(looping_stages)))
+dev.off()
+
+png(paste0(plot_dir, "Figure6_B.png"),width = 7, height = 3, units = "in", res = 300)
+JaccardBoxPlot
+dev.off()
+
+png(paste0(plot_dir, "Figure6_C.png"), width = 8, height = 8, units = "in", res = 300)
+ggarrange(
+  feature_umpas_panel,
+  violins,
+  nrow = 1,
+  ncol = 2,
+  widths = c(length(looping_stages)*each_width_ratio, 0.8)
+)
+dev.off()
+
+pcc_umaps_panel = ggarrange(
+  plotlist = pcc_umaps,
+  ncol = 1,
+  nrow = length(pcc_umaps),
+  common.legend = T,
+  legend = "bottom"
+)
+png(paste0(plot_dir, "Figure6_D.png"),width = 2.6, height = 8, units = "in", res = 300)
+pcc_umaps_panel
+dev.off()
+
