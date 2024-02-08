@@ -5,7 +5,7 @@ library(ggpubr)
 library(Seurat)
 library(dplyr)
 scRNA_obj = readRDS(
-  "~/scRNA_data/columbia_british_individually_harmony_ccRCC_harmony.rds"
+  paste0(intermediate_dir,"columbia_british_individually_harmony_ccRCC_harmony.rds")
 )
 
 # p1 = FeaturePlot(scRNA_obj, features = "HIF1A")
