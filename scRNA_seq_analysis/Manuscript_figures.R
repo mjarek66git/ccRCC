@@ -207,6 +207,7 @@ data_bar_plot_new[10] <- "green"
 ###############################################################################
 
 # Convert Seurat object to Monocle 3 CellDataSet
+ccRCC_obj <- scRNA_obj
 count_data <- ccRCC_obj@assays$RNA@counts
 cell_metadata <- ccRCC_obj@meta.data
 gene_metadata <- ccRCC_obj@assays$RNA@meta.features
@@ -271,6 +272,9 @@ p2 = plot_cells(cds, color_cells_by = "pseudotime",
   scale_colour_gradient2(low = "grey88", mid = "grey88", high = "magenta", midpoint = 15)+
   guides(color=guide_colorbar(title="pseudotime"))
 
+# Add pseudotime to metadata
+ccRCC_obj@meta.data$pseudotime <- cds@principal_graph_aux$UMAP$pseudotime[rownames(ccRCC_obj@meta.data)]
+
 # Discretize the pseduotime into 3 pseduotime states (Early, Intermediate and Late)
 ccRCC_obj@meta.data$pseudotime_levels <- 
   ifelse(ccRCC_obj@meta.data$pseudotime<quantile(ccRCC_obj@meta.data$pseudotime, 0.33), "Early time", "Intermediate")
@@ -282,7 +286,7 @@ ChiRes = chisq.test(ccRCC_obj@meta.data$stage, ccRCC_obj@meta.data$pseudotime_le
 corrplot_mat = ChiRes$residuals
 corrplot_df = as.data.frame(corrplot_mat)
 names(corrplot_df) = c("Stages", "Pseudotime Levels","Residuals")
-corrplot_df$Stages <- factor(corrplot_df$Stages, levels = c("Stage1", "Stage3", "Metastatic"))
+corrplot_df$Stages <- factor(corrplot_df$Stages, levels = c("S1", "S3", "Me"))
 corrplot_df$`Pseudotime Levels` <- factor(corrplot_df$`Pseudotime Levels`, 
                                           levels = c("Early time", "Intermediate", "Late time"))
 anno_text = ifelse(ChiRes$p.value<0.05, "P < 0.05", paste0("P = ", round(ChiRes$p.value, 3)))
