@@ -254,7 +254,6 @@ p1 = DimPlot(ccRCC_obj, group.by = target_res_para)+
   )
 p2 = plot_cells(cds, color_cells_by = "pseudotime",
                 label_groups_by_cluster = F,
-                split_cells_by = "patient",
                 label_branch_points = F,
                 label_leaves = F,
                 label_roots = F,
@@ -329,7 +328,7 @@ for(current_stage in looping_stages){
   }else{
     title_function = eval(parse(text="element_blank()"))
   }
-  subpopulations_umpa = DimPlot(scRNA_obj_stage, reduction = "umap", raster = T, group.by = plot_var)+
+  subpopulations_umpa = DimPlot(scRNA_obj_stage, reduction = "umap", raster = F, group.by = plot_var)+
     scale_color_manual(
       breaks = all_types, 
       values=all_colors[as.character(all_types)])+
@@ -370,7 +369,7 @@ for(current_stage in looping_stages){
     if(signature == target_signature_list_names[1]){
       plot_title = current_stage
     }
-    p = DimPlot(scRNA_obj_stage, reduction = "umap", raster = T,
+    p = DimPlot(scRNA_obj_stage, reduction = "umap", raster = F,
                 group.by = paste0(signature, module_score_tag, "_group"))+
       scale_color_manual(
         breaks = all_types, 
